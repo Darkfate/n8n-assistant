@@ -91,6 +91,33 @@ module "n8n_workflows" {
 }
 ```
 
+## CI/CD with GitHub Actions
+
+This project includes automated deployment via GitHub Actions with Tailscale integration for secure access to your n8n instance.
+
+### Quick Setup
+
+1. **Configure GitHub Secrets** (`Settings` → `Secrets and variables` → `Actions`):
+   - `N8N_API_URL` - Your n8n Tailscale URL (e.g., `http://n8n.tailnet-name.ts.net`)
+   - `N8N_API_KEY` - Your n8n API key
+   - `TAILSCALE_AUTH_KEY` - Reusable Tailscale auth key
+
+2. **Create Production Environment** (`Settings` → `Environments`):
+   - Name: `production`
+   - Required reviewers: Add approvers for apply stage
+
+3. **Configure Tailscale ACL** to allow GitHub Actions nodes to reach your n8n instance
+
+For detailed setup instructions, see [`.github/DEPLOYMENT.md`](.github/DEPLOYMENT.md).
+
+### Workflow Triggers
+
+| Event | Action | Requires Approval |
+|-------|--------|-------------------|
+| Pull Request | `terraform plan` only | No |
+| Push to `main` | `terraform plan` → apply | Yes |
+| Manual trigger | `terraform plan` → apply | Yes |
+
 ## Workflow Organization
 
 Organize workflows by domain or purpose:
