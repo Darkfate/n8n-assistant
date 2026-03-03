@@ -37,7 +37,8 @@ jobs:
 
       - name: Install Tailscale
         run: |
-          curl -fsSL https://tailscale.com/install.sh | sh
+          curl -fsSL https://tailscale.com/install.sh -o /tmp/install.sh
+          sh /tmp/install.sh
           tailscale version
 
       - name: Connect to Tailscale
@@ -126,7 +127,8 @@ jobs:
 
       - name: Install Tailscale
         run: |
-          curl -fsSL https://tailscale.com/install.sh | sh
+          curl -fsSL https://tailscale.com/install.sh -o /tmp/install.sh
+          sh /tmp/install.sh
           tailscale version
 
       - name: Connect to Tailscale
