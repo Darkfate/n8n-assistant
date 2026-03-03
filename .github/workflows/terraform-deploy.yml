@@ -35,6 +35,13 @@ jobs:
         with:
           terraform_version: ${{ env.TERRAFORM_VERSION }}
 
+      - name: Terraform Init (before Tailscale)
+        working-directory: ./terraform
+        env:
+          N8N_API_URL: ${{ secrets.N8N_API_URL }}
+          N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+        run: terraform init
+
       - name: Install Tailscale
         run: |
           curl -fsSL https://tailscale.com/install.sh -o /tmp/install.sh
@@ -45,13 +52,6 @@ jobs:
         run: |
           sudo tailscale up --authkey ${{ secrets.TAILSCALE_AUTH_KEY }} --hostname "github-actions-terraform" --accept-routes
           sudo tailscale status
-
-      - name: Terraform Init
-        working-directory: ./terraform
-        env:
-          N8N_API_URL: ${{ secrets.N8N_API_URL }}
-          N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
-        run: terraform init
 
       - name: Terraform Validate
         working-directory: ./terraform
@@ -123,6 +123,13 @@ jobs:
         with:
           terraform_version: ${{ env.TERRAFORM_VERSION }}
 
+      - name: Terraform Init (before Tailscale)
+        working-directory: ./terraform
+        env:
+          N8N_API_URL: ${{ secrets.N8N_API_URL }}
+          N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+        run: terraform init
+
       - name: Install Tailscale
         run: |
           curl -fsSL https://tailscale.com/install.sh -o /tmp/install.sh
@@ -133,13 +140,6 @@ jobs:
         run: |
           sudo tailscale up --authkey ${{ secrets.TAILSCALE_AUTH_KEY }} --hostname "github-actions-terraform" --accept-routes
           sudo tailscale status
-
-      - name: Terraform Init
-        working-directory: ./terraform
-        env:
-          N8N_API_URL: ${{ secrets.N8N_API_URL }}
-          N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
-        run: terraform init
 
       - name: Terraform Apply
         working-directory: ./terraform
