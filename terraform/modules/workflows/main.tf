@@ -18,7 +18,8 @@ resource "n8n_workflow" "workflows" {
   connections_json = jsonencode(jsondecode(file(each.value)).connections)
   settings_json    = jsonencode(jsondecode(file(each.value)).settings)
 
-  tags = ["terraform-managed", "home-lab"]
+  # Note: Tags must exist in n8n before they can be assigned
+  # tags = ["terraform-managed", "home-lab"]
 }
 
 output "deployed_workflows" {
