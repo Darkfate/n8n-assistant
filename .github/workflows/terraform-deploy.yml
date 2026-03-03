@@ -69,13 +69,13 @@ jobs:
           echo "exitcode=$exitcode" >> $GITHUB_OUTPUT
           exit $exitcode
 
-      - name: Save Plan Output
+      - name: Upload Plan Artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: terraform-plan
-          path: terraform/plan.txt
-          retention-days: 30
+          path: terraform/tfplan
+          retention-days: 7
 
       - name: Disconnect Tailscale
         if: always()
@@ -114,6 +114,12 @@ jobs:
         run: |
           sudo tailscale up --authkey ${{ secrets.TAILSCALE_AUTH_KEY }} --hostname "github-actions-terraform" --accept-routes
           sudo tailscale status
+
+      - name: Download Plan Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: terraform-plan
+          path: terraform/
 
       - name: Terraform Apply
         working-directory: ./terraform
