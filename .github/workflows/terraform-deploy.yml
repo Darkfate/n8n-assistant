@@ -77,30 +77,6 @@ jobs:
           path: terraform/plan.txt
           retention-days: 30
 
-      - name: Comment PR with Plan
-        if: github.event_name == 'pull_request'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-            const plan = fs.readFileSync('./terraform/plan.txt', 'utf8');
-            const output = `#### Terraform Plan 📖
-            <details><summary>Show Plan</summary>
-
-            \`\`\`terraform
-            ${plan}
-            \`\`\`
-            </details>
-
-            *Pushed by: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
-
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: output
-            });
-
       - name: Disconnect Tailscale
         if: always()
         run: sudo tailscale down
