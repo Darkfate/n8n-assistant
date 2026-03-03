@@ -4,8 +4,12 @@
 module "n8n_workflows" {
   source = "./modules/workflows"
 
-  # Workflow definitions are loaded from JSON files in workflows/
+  providers = {
+    n8n = n8n
+  }
+
+  # Workflow definitions are loaded from JSON files in workflows/ (relative to project root)
   workflow_files = [
-    "workflows/home-lab/example.json",
+    "${path.module}/../workflows/home-lab/example.json",
   ]
 }

@@ -16,7 +16,7 @@ on:
   workflow_dispatch:
 
 env:
-  TERRAFORM_VERSION: '1.5.7'
+  TERRAFORM_VERSION: '1.6.0'
   TAILSCALE_VERSION: '1.76.6'
 
 jobs:
@@ -35,22 +35,23 @@ jobs:
         with:
           terraform_version: ${{ env.TERRAFORM_VERSION }}
 
+      - name: Terraform Init (before Tailscale)
+        working-directory: ./terraform
+        env:
+          N8N_API_URL: ${{ vars.N8N_API_URL }}
+          N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+        run: terraform init
+
       - name: Install Tailscale
         run: |
-          curl -fsSL https://tailscale.com/install.sh | sh
+          curl -fsSL https://tailscale.com/install.sh -o /tmp/install.sh
+          sh /tmp/install.sh
           tailscale version
 
       - name: Connect to Tailscale
         run: |
-          echo "${{ secrets.TAILSCALE_AUTH_KEY }}" | tailscale up --authkey ${{ secrets.TAILSCALE_AUTH_KEY }} --hostname "github-actions-terraform"
-          tailscale status
-
-      - name: Terraform Init
-        working-directory: ./terraform
-        env:
-          N8N_API_URL: ${{ secrets.N8N_API_URL }}
-          N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
-        run: terraform init
+          sudo tailscale up --authkey ${{ secrets.TAILSCALE_AUTH_KEY }} --hostname "github-actions-terraform" --accept-routes
+          sudo tailscale status
 
       - name: Terraform Validate
         working-directory: ./terraform
@@ -60,14 +61,12 @@ jobs:
         id: plan
         working-directory: ./terraform
         env:
-          N8N_API_URL: ${{ secrets.N8N_API_URL }}
+          N8N_API_URL: ${{ vars.N8N_API_URL }}
           N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
         run: |
-          terraform plan -out=tfplan -no-color > plan.txt 2>&1
-          terraform plan -out=tfplan
+          terraform plan -out=tfplan -no-color 2>&1 | tee plan.txt
           exitcode=$?
           echo "exitcode=$exitcode" >> $GITHUB_OUTPUT
-          cat plan.txt
           exit $exitcode
 
       - name: Save Plan Output
@@ -78,33 +77,9 @@ jobs:
           path: terraform/plan.txt
           retention-days: 30
 
-      - name: Comment PR with Plan
-        if: github.event_name == 'pull_request'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-            const plan = fs.readFileSync('./terraform/plan.txt', 'utf8');
-            const output = `#### Terraform Plan 📖
-            <details><summary>Show Plan</summary>
-
-            \`\`\`terraform
-            ${plan}
-            \`\`\`
-            </details>
-
-            *Pushed by: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
-
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: output
-            });
-
       - name: Disconnect Tailscale
         if: always()
-        run: tailscale down
+        run: sudo tailscale down
 
   # Apply job only runs on push to main and requires manual approval
   apply:
@@ -112,9 +87,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: plan
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    environment:
-      name: production
-      url: ${{ secrets.N8N_API_URL }}
+    environment: production
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -124,30 +97,31 @@ jobs:
         with:
           terraform_version: ${{ env.TERRAFORM_VERSION }}
 
+      - name: Terraform Init (before Tailscale)
+        working-directory: ./terraform
+        env:
+          N8N_API_URL: ${{ vars.N8N_API_URL }}
+          N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+        run: terraform init
+
       - name: Install Tailscale
         run: |
-          curl -fsSL https://tailscale.com/install.sh | sh
+          curl -fsSL https://tailscale.com/install.sh -o /tmp/install.sh
+          sh /tmp/install.sh
           tailscale version
 
       - name: Connect to Tailscale
         run: |
-          echo "${{ secrets.TAILSCALE_AUTH_KEY }}" | tailscale up --authkey ${{ secrets.TAILSCALE_AUTH_KEY }} --hostname "github-actions-terraform"
-          tailscale status
-
-      - name: Terraform Init
-        working-directory: ./terraform
-        env:
-          N8N_API_URL: ${{ secrets.N8N_API_URL }}
-          N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
-        run: terraform init
+          sudo tailscale up --authkey ${{ secrets.TAILSCALE_AUTH_KEY }} --hostname "github-actions-terraform" --accept-routes
+          sudo tailscale status
 
       - name: Terraform Apply
         working-directory: ./terraform
         env:
-          N8N_API_URL: ${{ secrets.N8N_API_URL }}
+          N8N_API_URL: ${{ vars.N8N_API_URL }}
           N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
         run: terraform apply -auto-approve tfplan
 
       - name: Disconnect Tailscale
         if: always()
-        run: tailscale down
+        run: sudo tailscale down
