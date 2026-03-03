@@ -43,7 +43,7 @@ jobs:
 
       - name: Connect to Tailscale
         run: |
-          sudo tailscale up --authkey ${{ secrets.TAILSCALE_AUTH_KEY }} --hostname "github-actions-terraform"
+          sudo tailscale up --authkey ${{ secrets.TAILSCALE_AUTH_KEY }} --hostname "github-actions-terraform" --accept-routes
           sudo tailscale status
 
       - name: Terraform Init
@@ -131,7 +131,7 @@ jobs:
 
       - name: Connect to Tailscale
         run: |
-          sudo tailscale up --authkey ${{ secrets.TAILSCALE_AUTH_KEY }} --hostname "github-actions-terraform"
+          sudo tailscale up --authkey ${{ secrets.TAILSCALE_AUTH_KEY }} --hostname "github-actions-terraform" --accept-routes
           sudo tailscale status
 
       - name: Terraform Init
