@@ -10,10 +10,13 @@ variable "workflow_files" {
 resource "n8n_workflow" "workflows" {
   for_each = toset(var.workflow_files)
 
-  name        = trimsuffix(basename(each.value), ".json")
-  description = "Managed by Terraform - n8n-assistant"
-  # Note: The actual workflow content will be loaded from the JSON file
-  # You may need to use file() or jsondecode() depending on provider implementation
+  name  = trimsuffix(basename(each.value), ".json")
+  active = false
+
+  # Load workflow content from JSON file
+  nodes_json      = jsonencode(jsondecode(file(each.value)).nodes)
+  connections_json = jsonencode(jsondecode(file(each.value)).connections)
+  settings_json    = jsonencode(jsondecode(file(each.value)).settings)
 
   tags = ["terraform-managed", "home-lab"]
 }
