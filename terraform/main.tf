@@ -15,7 +15,8 @@ terraform {
 }
 
 provider "n8n" {
-  # Configuration loaded from environment variables:
-  # N8N_API_URL - Your n8n instance URL
-  # N8N_API_KEY - Your n8n API key
+  # Base URL for your n8n instance (from N8N_API_URL env var)
+  base_url = var.n8n_api_url
+  # API key for authentication (from N8N_API_KEY env var)
+  api_key  = var.n8n_api_key
 }
