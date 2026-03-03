@@ -64,11 +64,9 @@ jobs:
           N8N_API_URL: ${{ vars.N8N_API_URL }}
           N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
         run: |
-          terraform plan -out=tfplan -no-color > plan.txt 2>&1
-          terraform plan -out=tfplan
+          terraform plan -out=tfplan -no-color 2>&1 | tee plan.txt
           exitcode=$?
           echo "exitcode=$exitcode" >> $GITHUB_OUTPUT
-          cat plan.txt
           exit $exitcode
 
       - name: Save Plan Output
