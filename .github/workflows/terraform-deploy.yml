@@ -38,7 +38,7 @@ jobs:
       - name: Terraform Init (before Tailscale)
         working-directory: ./terraform
         env:
-          N8N_API_URL: ${{ secrets.N8N_API_URL }}
+          N8N_API_URL: ${{ vars.N8N_API_URL }}
           N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
         run: terraform init
 
@@ -61,7 +61,7 @@ jobs:
         id: plan
         working-directory: ./terraform
         env:
-          N8N_API_URL: ${{ secrets.N8N_API_URL }}
+          N8N_API_URL: ${{ vars.N8N_API_URL }}
           N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
         run: |
           terraform plan -out=tfplan -no-color > plan.txt 2>&1
@@ -126,7 +126,7 @@ jobs:
       - name: Terraform Init (before Tailscale)
         working-directory: ./terraform
         env:
-          N8N_API_URL: ${{ secrets.N8N_API_URL }}
+          N8N_API_URL: ${{ vars.N8N_API_URL }}
           N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
         run: terraform init
 
@@ -144,7 +144,7 @@ jobs:
       - name: Terraform Apply
         working-directory: ./terraform
         env:
-          N8N_API_URL: ${{ secrets.N8N_API_URL }}
+          N8N_API_URL: ${{ vars.N8N_API_URL }}
           N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
         run: terraform apply -auto-approve tfplan
 
