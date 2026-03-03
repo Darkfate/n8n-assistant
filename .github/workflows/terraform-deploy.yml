@@ -43,8 +43,8 @@ jobs:
 
       - name: Connect to Tailscale
         run: |
-          tailscale up --authkey ${{ secrets.TAILSCALE_AUTH_KEY }} --hostname "github-actions-terraform"
-          tailscale status
+          sudo tailscale up --authkey ${{ secrets.TAILSCALE_AUTH_KEY }} --hostname "github-actions-terraform"
+          sudo tailscale status
 
       - name: Terraform Init
         working-directory: ./terraform
@@ -105,7 +105,7 @@ jobs:
 
       - name: Disconnect Tailscale
         if: always()
-        run: tailscale down
+        run: sudo tailscale down
 
   # Apply job only runs on push to main and requires manual approval
   apply:
@@ -131,8 +131,8 @@ jobs:
 
       - name: Connect to Tailscale
         run: |
-          tailscale up --authkey ${{ secrets.TAILSCALE_AUTH_KEY }} --hostname "github-actions-terraform"
-          tailscale status
+          sudo tailscale up --authkey ${{ secrets.TAILSCALE_AUTH_KEY }} --hostname "github-actions-terraform"
+          sudo tailscale status
 
       - name: Terraform Init
         working-directory: ./terraform
@@ -150,4 +150,4 @@ jobs:
 
       - name: Disconnect Tailscale
         if: always()
-        run: tailscale down
+        run: sudo tailscale down
