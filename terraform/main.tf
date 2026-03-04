@@ -7,11 +7,13 @@ terraform {
     }
   }
 
-  # State can be backed by GitHub or other backends
-  # backend "http" {
-  #   lock_url    = "https://github.com/Darkfate/n8n-assistant/terraform.lock"
-  #   address     = "https://github.com/Darkfate/n8n-assistant/terraform.tfstate"
-  # }
+  # S3 backend for S3-compatible storage
+  # Credentials and endpoint must be provided via -backend-config
+  backend "s3" {
+    bucket = "terraform-state"
+    key    = "n8n-assistant/terraform.tfstate"
+    region = "us-east-1"
+  }
 }
 
 provider "n8n" {

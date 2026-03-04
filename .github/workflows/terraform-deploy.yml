@@ -16,7 +16,7 @@ on:
   workflow_dispatch:
 
 env:
-  TERRAFORM_VERSION: '1.6.0'
+  TERRAFORM_VERSION: '1.9'
   TAILSCALE_VERSION: '1.76.6'
 
 jobs:
@@ -35,13 +35,6 @@ jobs:
         with:
           terraform_version: ${{ env.TERRAFORM_VERSION }}
 
-      - name: Terraform Init (before Tailscale)
-        working-directory: ./terraform
-        env:
-          N8N_API_URL: ${{ vars.N8N_API_URL }}
-          N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
-        run: terraform init
-
       - name: Install Tailscale
         run: |
           curl -fsSL https://tailscale.com/install.sh -o /tmp/install.sh
@@ -52,6 +45,24 @@ jobs:
         run: |
           sudo tailscale up --authkey ${{ secrets.TAILSCALE_AUTH_KEY }} --hostname "github-actions-terraform" --accept-routes
           sudo tailscale status
+
+      - name: Terraform Init
+        working-directory: ./terraform
+        env:
+          N8N_API_URL: ${{ vars.N8N_API_URL }}
+          N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: |
+          terraform init \
+            -backend-config="endpoints={s3=\"${{ vars.S3_ENDPOINT }}\"}" \
+            -backend-config="access_key=${{ secrets.AWS_ACCESS_KEY_ID }}" \
+            -backend-config="secret_key=${{ secrets.AWS_SECRET_ACCESS_KEY }}" \
+            -backend-config="skip_credentials_validation=true" \
+            -backend-config="skip_metadata_api_check=true" \
+            -backend-config="skip_region_validation=true" \
+            -backend-config="skip_requesting_account_id=true" \
+            -backend-config="use_path_style=true"
 
       - name: Terraform Validate
         working-directory: ./terraform
@@ -97,13 +108,6 @@ jobs:
         with:
           terraform_version: ${{ env.TERRAFORM_VERSION }}
 
-      - name: Terraform Init (before Tailscale)
-        working-directory: ./terraform
-        env:
-          N8N_API_URL: ${{ vars.N8N_API_URL }}
-          N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
-        run: terraform init
-
       - name: Install Tailscale
         run: |
           curl -fsSL https://tailscale.com/install.sh -o /tmp/install.sh
@@ -114,6 +118,24 @@ jobs:
         run: |
           sudo tailscale up --authkey ${{ secrets.TAILSCALE_AUTH_KEY }} --hostname "github-actions-terraform" --accept-routes
           sudo tailscale status
+
+      - name: Terraform Init
+        working-directory: ./terraform
+        env:
+          N8N_API_URL: ${{ vars.N8N_API_URL }}
+          N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: |
+          terraform init \
+            -backend-config="endpoints={s3=\"${{ vars.S3_ENDPOINT }}\"}" \
+            -backend-config="access_key=${{ secrets.AWS_ACCESS_KEY_ID }}" \
+            -backend-config="secret_key=${{ secrets.AWS_SECRET_ACCESS_KEY }}" \
+            -backend-config="skip_credentials_validation=true" \
+            -backend-config="skip_metadata_api_check=true" \
+            -backend-config="skip_region_validation=true" \
+            -backend-config="skip_requesting_account_id=true" \
+            -backend-config="use_path_style=true"
 
       - name: Download Plan Artifact
         uses: actions/download-artifact@v4
