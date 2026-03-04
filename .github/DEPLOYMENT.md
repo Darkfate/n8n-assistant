@@ -4,6 +4,44 @@ This project uses GitHub Actions to deploy n8n workflows via Terraform, using Ta
 
 ## Prerequisites
 
+### S3 Backend Setup
+
+This project uses an S3-compatible backend for Terraform state storage (MinIO, AWS S3, or any S3-compatible service). Before deploying, ensure:
+
+1. **S3 service is running** (MinIO, AWS S3, or compatible)
+2. **Create the terraform-state bucket**:
+   - For MinIO: Access the console at your configured endpoint
+   - Login with your S3 credentials
+   - Create a new bucket named `terraform-state`
+   - Set bucket versioning to enabled (optional but recommended)
+
+3. **Initialize Terraform** with backend configuration:
+   ```bash
+   cd terraform
+   terraform init \
+     -backend-config="endpoints={s3=\"http://100.67.164.44:9000\"}" \
+     -backend-config="access_key=minioadmin" \
+     -backend-config="secret_key=your-password" \
+     -backend-config="skip_credentials_validation=true" \
+     -backend-config="skip_metadata_api_check=true" \
+     -backend-config="skip_region_validation=true" \
+     -backend-config="skip_requesting_account_id=true" \
+     -backend-config="use_path_style=true"
+   ```
+
+   **Tip:** Create a shell alias or script for this command to avoid retyping:
+   ```bash
+   alias tf-init='cd terraform && terraform init \
+     -backend-config="endpoints={s3=\"$S3_ENDPOINT\"}" \
+     -backend-config="access_key=$AWS_ACCESS_KEY_ID" \
+     -backend-config="secret_key=$AWS_SECRET_ACCESS_KEY" \
+     -backend-config="skip_credentials_validation=true" \
+     -backend-config="skip_metadata_api_check=true" \
+     -backend-config="skip_region_validation=true" \
+     -backend-config="skip_requesting_account_id=true" \
+     -backend-config="use_path_style=true"'
+   ```
+
 ### Required GitHub Secrets
 
 Configure the following secrets in your GitHub repository settings (`Settings` → `Secrets and variables` → `Actions`):
@@ -13,6 +51,11 @@ Configure the following secrets in your GitHub repository settings (`Settings` �
 | `N8N_API_URL` | Your n8n instance URL (Tailscale address) | `http://n8n.tailnet-name.ts.net` |
 | `N8N_API_KEY` | Your n8n API key | `n8n_api_...` |
 | `TAILSCALE_AUTH_KEY` | Tailscale auth key for GitHub Actions | `tskey-auth-...` |
+| `S3_ENDPOINT` | S3-compatible endpoint URL (configure as Variable) | `http://100.67.164.44:9000` |
+| `AWS_ACCESS_KEY_ID` | S3 access key | `minioadmin` |
+| `AWS_SECRET_ACCESS_KEY` | S3 secret key | `your-s3-password` |
+
+> **Note:** `S3_ENDPOINT` should be configured as a **Variable** (not Secret) in GitHub Actions settings.
 
 ### Environment Setup
 
@@ -105,15 +148,32 @@ tailscale up --authkey=<your-auth-key> --hostname test
 curl -H "X-N8N-API-KEY: <your-key>" <N8N_API_URL>/api/v1/workflows
 ```
 
-### State File Issues
+### Backend Configuration
 
-If Terraform state issues occur, you may need to configure a backend in `terraform/main.tf`:
+The S3 backend requires configuration via `-backend-config` flags (for both local and GitHub Actions).
 
-```hcl
-terraform {
-  backend "http" {
-    address     = "https://github.com/YOUR_ORG/YOUR_REPO/terraform.tfstate"
-    lock_address = "https://github.com/YOUR_ORG/YOUR_REPO/terraform.lock"
-  }
-}
+**For local development**, create a shell alias or script:
+
+```bash
+# Add to ~/.bashrc or ~/.zshrc
+alias tf-init='cd terraform && terraform init \
+  -backend-config="endpoint=http://100.67.164.44:9000" \
+  -backend-config="access_key=$AWS_ACCESS_KEY_ID" \
+  -backend-config="secret_key=$AWS_SECRET_ACCESS_KEY" \
+  -backend-config="skip_credentials_validation=true" \
+  -backend-config="skip_metadata_api_check=true" \
+  -backend-config="skip_region_validation=true" \
+  -backend-config="force_path_style=true"'
 ```
+
+**For GitHub Actions:**
+- Automatically configured via `-backend-config` flags in the workflow
+- Requires `S3_ENDPOINT` variable and `AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY` secrets
+
+**To customize the S3 endpoint:**
+Set the `S3_ENDPOINT` environment variable or edit the workflow.
+
+**Common issues:**
+- Ensure the `terraform-state` bucket exists in your S3 service
+- For S3-compatible services, credentials must be provided explicitly (env vars alone trigger AWS validation)
+- Check that the S3 endpoint is accessible from your network
