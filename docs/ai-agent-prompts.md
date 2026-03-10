@@ -4,6 +4,72 @@ This document contains the prompt templates and examples used by the Home Assist
 
 ---
 
+## AI Provider Configuration
+
+The n8n AI Agent workflow supports multiple AI providers through a simple switching mechanism.
+
+### Supported Providers
+
+| Provider | Description | Default Model |
+|----------|-------------|---------------|
+| **Zai GLM** | Zai's GLM API (cloud) | `glm-4.7` |
+| **Ollama** | Local LLM server | `llama3.2` |
+
+### Configuration
+
+Switch between AI providers using environment variables in n8n:
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `AI_PROVIDER` | AI provider to use | `zai-glm` or `ollama` |
+| `AI_MODEL` | Model name for the provider | `glm-4.7`, `llama3.2`, `mistral`, etc. |
+| `OLLAMA_URL` | Ollama server URL | `http://localhost:11434` (default) |
+
+### Example Configurations
+
+**Zai GLM (default):**
+```bash
+AI_PROVIDER=zai-glm
+AI_MODEL=glm-4.7
+```
+
+**Ollama with Llama 3.2:**
+```bash
+AI_PROVIDER=ollama
+AI_MODEL=llama3.2
+OLLAMA_URL=http://localhost:11434
+```
+
+**Ollama with Mistral:**
+```bash
+AI_PROVIDER=ollama
+AI_MODEL=mistral
+OLLAMA_URL=http://ollama.local:11434
+```
+
+**Request-level override:**
+You can also specify the provider per-request by including `ai_provider` and `ai_model` in the webhook payload:
+```json
+{
+  "input_text": "Turn on the lights",
+  "source": "home-assistant",
+  "ai_provider": "ollama",
+  "ai_model": "llama3.2"
+}
+```
+
+### Adding a New Provider
+
+To add a new AI provider:
+
+1. **Add a new HTTP Request node** similar to "Call Zai GLM" or "Call Ollama"
+2. **Configure the API endpoint** for the new provider
+3. **Add a route** in the "Route AI Provider" switch node
+4. **Update "Normalize AI Response"** code node to handle the new response format
+5. **Connect the new node** to "Merge AI Responses"
+
+---
+
 ## System Prompt
 
 ```
@@ -210,42 +276,17 @@ The AI must respond with valid JSON containing:
 
 ---
 
-## Home Assistant Voice Assistant Pipeline Configuration
+## Home Assistant Voice Assistant Setup
 
-Add this to your Home Assistant `conversation.yaml` or configure via UI:
+**See [ha-voice-assistant-setup.md](ha-voice-assistant-setup.md) for complete integration instructions.**
 
-```yaml
-conversation:
-  intents:
-    HassTurnOn:
-      - Turn on the {name}
-    HassTurnOff:
-      - Turn off the {name}
-    HassClimateSetTemperature:
-      - Set temperature to {temperature} degrees
-```
+The setup guide includes:
+- REST command configuration for n8n webhook
+- Script creation for voice command processing
+- Custom pipeline configuration
+- Network and security considerations
 
-### Pipeline Configuration
-
-Create a custom pipeline that calls the n8n webhook:
-
-```yaml
-# pipelines/custom_assistant.yaml
-language: en
-stages:
-  - stt:
-      engine: google
-  - conversation:
-      agent:
-        type: n8n
-        url: http://your-n8n-instance:5678/webhook/ha-agent
-  - tts:
-      engine: google
-```
-
----
-
-## Testing with curl
+### Quick Test
 
 ```bash
 # Test webhook directly
@@ -265,4 +306,8 @@ curl -X POST http://your-n8n-instance:5678/webhook/ha-agent \
 | Variable | Description | Example |
 |----------|-------------|---------|
 | `HOME_ASSISTANT_URL` | Home Assistant base URL | `http://homeassistant.local:8123` |
+| `HOME_ASSISTANT_TOKEN` | Long-lived access token | Generate in HA UI |
+| `AI_PROVIDER` | AI provider to use (optional, default: zai-glm) | `zai-glm`, `ollama` |
+| `AI_MODEL` | Model name for the provider (optional) | `glm-4.7`, `llama3.2`, `mistral` |
+| `OLLAMA_URL` | Ollama server URL (for Ollama provider) | `http://localhost:11434` |
 | `ZAI_GLM_API_KEY` | Zai GLM API authentication key | `your-api-key` |

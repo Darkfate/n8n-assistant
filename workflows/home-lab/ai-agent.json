@@ -41,25 +41,116 @@
     },
     {
       "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "provider-config",
+              "name": "ai_provider",
+              "value": "={{ $json.ai_provider || $env.AI_PROVIDER || 'zai-glm' }}",
+              "type": "string"
+            },
+            {
+              "id": "model-config",
+              "name": "ai_model",
+              "value": "={{ $json.ai_model || $env.AI_MODEL || 'glm-4.7' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b1c1e1c1-0000-4000-8000-000000000016",
+      "name": "Set AI Provider",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.ai_provider }}",
+              "rightValue": "ollama",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "b1c1e1c1-0000-4000-8000-000000000017",
+      "name": "Route AI Provider",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
         "url": "=https://api.z.ai/api/coding/paas/v4",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "httpHeaderAuth",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"model\": \"glm-4.7\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are a Home Assistant automation agent. Parse user requests into Home Assistant service calls.\\n\\nAvailable entities: {{ $json.entities_context }}\\nAvailable services: {{ $json.services_context }}\\n\\nOutput valid JSON only with this structure:\\n{\\n  \\\"action\\\": \\\"call_service\\\" | \\\"query_state\\\" | \\\"error\\\",\\n  \\\"service\\\": \\\"domain.service\\\",\\n  \\\"entity_id\\\": \\\"entity.domain\\\",\\n  \\\"parameters\\\": {},\\n  \\\"response_text\\\": \\\"natural language confirmation\\\"\\n}\\n\\nIf request is ambiguous or impossible, set action to \\\"error\\\" with explanation.\\n\\nExamples:\\n- 'Turn on living room lights' -> {\\\"action\\\": \\\"call_service\\\", \\\"service\\\": \\\"light.turn_on\\\", \\\"entity_id\\\": \\\"light.living_room\\\", \\\"parameters\\\": {}, \\\"response_text\\\": \\\"Turning on the living room lights\\\"}\\n- 'Set temperature to 22 degrees' -> {\\\"action\\\": \\\"call_service\\\", \\\"service\\\": \\\"climate.set_temperature\\\", \\\"entity_id\\\": \\\"climate.thermostat\\\", \\\"parameters\\\": {\\\"temperature\\\": 22}, \\\"response_text\\\": \\\"Setting temperature to 22 degrees\\\"}\\n- 'Activate bedtime scene' -> {\\\"action\\\": \\\"call_service\\\", \\\"service\\\": \\\"scene.turn_on\\\", \\\"entity_id\\\": \\\"scene.bedtime\\\", \\\"parameters\\\": {}, \\\"response_text\\\": \\\"Activating bedtime scene\\\"}\\n- 'Launch rocket' -> {\\\"action\\\": \\\"error\\\", \\\"response_text\\\": \\\"I don't know how to launch a rocket. Available actions are controlling lights, climate, covers, scripts, and scenes.\\\"}\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"{{ $json.input_text }}\"\n    }\n  ],\n  \"temperature\": 0.3,\n  \"response_format\": {\"type\": \"json_object\"}\n}",
+        "jsonBody": "={\n  \"model\": \"{{ $json.ai_model || 'glm-4.7' }}\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are a Home Assistant automation agent. Parse user requests into Home Assistant service calls.\\n\\nAvailable entities: {{ $json.entities_context }}\\nAvailable services: {{ $json.services_context }}\\n\\nOutput valid JSON only with this structure:\\n{\\n  \\\"action\\\": \\\"call_service\\\" | \\\"query_state\\\" | \\\"error\\\",\\n  \\\"service\\\": \\\"domain.service\\\",\\n  \\\"entity_id\\\": \\\"entity.domain\\\",\\n  \\\"parameters\\\": {},\\n  \\\"response_text\\\": \\\"natural language confirmation\\\"\\n}\\n\\nIf request is ambiguous or impossible, set action to \\\"error\\\" with explanation.\\n\\nExamples:\\n- 'Turn on living room lights' -> {\\\"action\\\": \\\"call_service\\\", \\\"service\\\": \\\"light.turn_on\\\", \\\"entity_id\\\": \\\"light.living_room\\\", \\\"parameters\\\": {}, \\\"response_text\\\": \\\"Turning on the living room lights\\\"}\\n- 'Set temperature to 22 degrees' -> {\\\"action\\\": \\\"call_service\\\", \\\"service\\\": \\\"climate.set_temperature\\\", \\\"entity_id\\\": \\\"climate.thermostat\\\", \\\"parameters\\\": {\\\"temperature\\\": 22}, \\\"response_text\\\": \\\"Setting temperature to 22 degrees\\\"}\\n- 'Activate bedtime scene' -> {\\\"action\\\": \\\"call_service\\\", \\\"service\\\": \\\"scene.turn_on\\\", \\\"entity_id\\\": \\\"scene.bedtime\\\", \\\"parameters\\\": {}, \\\"response_text\\\": \\\"Activating bedtime scene\\\"}\\n- 'Launch rocket' -> {\\\"action\\\": \\\"error\\\", \\\"response_text\\\": \\\"I don't know how to launch a rocket. Available actions are controlling lights, climate, covers, scripts, and scenes.\\\"}\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"{{ $json.input_text }}\"\n    }\n  ],\n  \"temperature\": 0.3,\n  \"response_format\": {\"type\": \"json_object\"}\n}",
         "options": {}
       },
       "id": "b1c1e1c1-0000-4000-8000-000000000003",
-      "name": "Call AI Service",
+      "name": "Call Zai GLM",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [680, 300],
+      "position": [1120, 200],
       "credentials": {
         "httpHeaderAuth": {
           "id": "1",
           "name": "Zai GLM API"
         }
       }
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.OLLAMA_URL || 'http://localhost:11434' }}/api/chat",
+        "authentication": "none",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"{{ $json.ai_model || 'llama3.2' }}\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are a Home Assistant automation agent. Parse user requests into Home Assistant service calls.\\n\\nAvailable entities: {{ $json.entities_context }}\\nAvailable services: {{ $json.services_context }}\\n\\nOutput valid JSON only with this structure:\\n{\\n  \\\"action\\\": \\\"call_service\\\" | \\\"query_state\\\" | \\\"error\\\",\\n  \\\"service\\\": \\\"domain.service\\\",\\n  \\\"entity_id\\\": \\\"entity.domain\\\",\\n  \\\"parameters\\\": {},\\n  \\\"response_text\\\": \\\"natural language confirmation\\\"\\n}\\n\\nIf request is ambiguous or impossible, set action to \\\"error\\\" with explanation.\\n\\nExamples:\\n- 'Turn on living room lights' -> {\\\"action\\\": \\\"call_service\\\", \\\"service\\\": \\\"light.turn_on\\\", \\\"entity_id\\\": \\\"light.living_room\\\", \\\"parameters\\\": {}, \\\"response_text\\\": \\\"Turning on the living room lights\\\"}\\n- 'Set temperature to 22 degrees' -> {\\\"action\\\": \\\"call_service\\\", \\\"service\\\": \\\"climate.set_temperature\\\", \\\"entity_id\\\": \\\"climate.thermostat\\\", \\\"parameters\\\": {\\\"temperature\\\": 22}, \\\"response_text\\\": \\\"Setting temperature to 22 degrees\\\"}\\n- 'Activate bedtime scene' -> {\\\"action\\\": \\\"call_service\\\", \\\"service\\\": \\\"scene.turn_on\\\", \\\"entity_id\\\": \\\"scene.bedtime\\\", \\\"parameters\\\": {}, \\\"response_text\\\": \\\"Activating bedtime scene\\\"}\\n- 'Launch rocket' -> {\\\"action\\\": \\\"error\\\", \\\"response_text\\\": \\\"I don't know how to launch a rocket. Available actions are controlling lights, climate, covers, scripts, and scenes.\\\"}\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"{{ $json.input_text }}\"\n    }\n  ],\n  \"stream\": false,\n  \"format\": \"json\"\n}",
+        "options": {}
+      },
+      "id": "b1c1e1c1-0000-4000-8000-000000000018",
+      "name": "Call Ollama",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1120, 400]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "mergeByPosition",
+        "options": {}
+      },
+      "id": "b1c1e1c1-0000-4000-8000-000000000019",
+      "name": "Merge AI Responses",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [1340, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Normalize AI responses from different providers to a common format\n// Zai GLM returns: { choices: [{ message: { content: \"...\" } } ] }\n// Ollama returns: { message: { content: \"...\" } }\n\nconst response = $input.first().json;\nlet normalizedContent = '';\nlet provider = 'unknown';\n\n// Try Zai GLM format\nif (response.choices && response.choices[0] && response.choices[0].message) {\n  normalizedContent = response.choices[0].message.content;\n  provider = 'zai-glm';\n}\n// Try Ollama format\nelse if (response.message && response.message.content) {\n  normalizedContent = response.message.content;\n  provider = 'ollama';\n}\n// Fallback: try direct content field\nelse if (response.content) {\n  normalizedContent = response.content;\n  provider = 'generic';\n}\n// Error: no recognizable format\nelse {\n  return [{\n    json: {\n      error: 'Unrecognized AI response format',\n      raw_response: JSON.stringify(response),\n      provider: 'unknown'\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    // Original response preserved\n    raw_response: response,\n    ai_provider: provider,\n    // Normalized format compatible with existing validation\n    choices: [{\n      message: {\n        content: normalizedContent\n      }\n    }]\n  }\n}];"
+      },
+      "id": "b1c1e1c1-0000-4000-8000-000000000020",
+      "name": "Normalize AI Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1560, 300]
     },
     {
       "parameters": {
@@ -95,17 +186,17 @@
       "name": "Validate AI Response",
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3,
-      "position": [900, 300]
+      "position": [1780, 300]
     },
     {
       "parameters": {
-        "jsCode": "// Parse the AI response JSON\nconst aiResponse = JSON.parse($input.first().json.choices[0].message.content);\n\n// Validate required fields\nif (!aiResponse.action) {\n  return [{\n    json: {\n      error: 'Invalid AI response: missing action field',\n      raw_response: $input.first().json.choices[0].message.content\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    action: aiResponse.action,\n    service: aiResponse.service || null,\n    entity_id: aiResponse.entity_id || null,\n    parameters: aiResponse.parameters || {},\n    response_text: aiResponse.response_text || 'Action completed',\n    raw_response: $input.first().json.choices[0].message.content\n  }\n}];"
+        "jsCode": "// Parse the AI response JSON\nconst aiResponse = JSON.parse($input.first().json.choices[0].message.content);\n\n// Validate required fields\nif (!aiResponse.action) {\n  return [{\n    json: {\n      error: 'Invalid AI response: missing action field',\n      raw_response: $input.first().json.choices[0].message.content\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    action: aiResponse.action,\n    service: aiResponse.service || null,\n    entity_id: aiResponse.entity_id || null,\n    parameters: aiResponse.parameters || {},\n    response_text: aiResponse.response_text || 'Action completed',\n    raw_response: $input.first().json.choices[0].message.content,\n    ai_provider: $input.first().json.ai_provider || 'unknown'\n  }\n}];"
       },
       "id": "b1c1e1c1-0000-4000-8000-000000000005",
       "name": "Parse AI Response",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1120, 200]
+      "position": [2000, 200]
     },
     {
       "parameters": {
@@ -133,7 +224,17 @@
       "name": "Action Type Check",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
-      "position": [1340, 200]
+      "position": [2220, 200]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Build the Home Assistant service call request body\n// Properly merge entity_id with any additional parameters\nconst entityId = $json.entity_id;\nconst parameters = $json.parameters || {};\n\n// Start with entity_id as required field\nconst requestBody = {\n  entity_id: entityId\n};\n\n// Merge any additional parameters\nObject.assign(requestBody, parameters);\n\nreturn [{\n  json: {\n    // Pass through existing fields\n    action: $json.action,\n    service: $json.service,\n    entity_id: $json.entity_id,\n    parameters: $json.parameters,\n    response_text: $json.response_text,\n    request_id: $json.request_id,\n    raw_response: $json.raw_response,\n    // Add the properly constructed request body\n    ha_request_body: requestBody\n  }\n}];"
+      },
+      "id": "b1c1e1c1-0000-4000-8000-000000000015",
+      "name": "Build HA Request Body",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1560, 120]
     },
     {
       "parameters": {
@@ -142,14 +243,14 @@
         "nodeCredentialType": "homeAssistantApi",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"entity_id\": \"{{ $json.entity_id }}\",\n  {{ $json.parameters ? JSON.stringify($json.parameters).slice(1, -1) : '' }}\n}",
+        "jsonBody": "={{ JSON.stringify($json.ha_request_body) }}",
         "options": {}
       },
       "id": "b1c1e1c1-0000-4000-8000-000000000007",
       "name": "Call Home Assistant",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [1560, 120],
+      "position": [1780, 120],
       "credentials": {
         "homeAssistantApi": {
           "id": "2",
@@ -188,7 +289,7 @@
       "name": "Format Success Response",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3,
-      "position": [1780, 120]
+      "position": [2000, 120]
     },
     {
       "parameters": {
@@ -217,18 +318,18 @@
       "name": "Format Error Response",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3,
-      "position": [1560, 280]
+      "position": [2440, 280]
     },
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={{ {\n  status: $json.status,\n  message: $json.message,\n  action_taken: $json.action_taken,\n  entity: $json.entity || null,\n  request_id: $json.request_id\n} }}"
+        "responseBody": "={{ {\n  status: $json.status,\n  message: $json.message,\n  action_taken: $json.action_taken,\n  entity: $json.entity || null,\n  request_id: $json.request_id,\n  ai_provider: $json.ai_provider || null\n} }}"
       },
       "id": "b1c1e1c1-0000-4000-8000-000000000010",
       "name": "Respond to Webhook",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
-      "position": [2000, 200]
+      "position": [3100, 200]
     },
     {
       "parameters": {
@@ -304,7 +405,7 @@
       "name": "Error Handler",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3,
-      "position": [1120, 400]
+      "position": [1780, 420]
     }
   ],
   "connections": {
@@ -361,18 +462,69 @@
       "main": [
         [
           {
-            "node": "Call AI Service",
+            "node": "Set AI Provider",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Call AI Service": {
+    "Set AI Provider": {
       "main": [
         [
           {
-            "node": "Validate AI Response",
+            "node": "Route AI Provider",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route AI Provider": {
+      "main": [
+        [
+          {
+            "node": "Call Ollama",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call Zai GLM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Zai GLM": {
+      "main": [
+        [
+          {
+            "node": "Merge AI Responses",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Ollama": {
+      "main": [
+        [
+          {
+            "node": "Merge AI Responses",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge AI Responses": {
+      "main": [
+        [
+          {
+            "node": "Normalize AI Response",
             "type": "main",
             "index": 0
           }
@@ -412,7 +564,7 @@
       "main": [
         [
           {
-            "node": "Call Home Assistant",
+            "node": "Build HA Request Body",
             "type": "main",
             "index": 0
           }
@@ -420,6 +572,17 @@
         [
           {
             "node": "Format Error Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build HA Request Body": {
+      "main": [
+        [
+          {
+            "node": "Call Home Assistant",
             "type": "main",
             "index": 0
           }
