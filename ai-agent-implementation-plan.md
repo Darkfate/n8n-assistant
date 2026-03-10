@@ -78,10 +78,10 @@ This document outlines the implementation of an AI-powered agent that receives n
   ```
 
 #### Step 1.2: Add AI Service Abstraction Layer
-- [ ] Create reusable n8n sub-workflow or function node for AI calls
-- [ ] Design AI provider selection logic (switch based on variable)
-- [ ] Implement Zai GLM 4.7 integration
-- [ ] Prepare placeholder for Ollama/local LLM
+- [x] Create reusable n8n sub-workflow or function node for AI calls
+- [x] Design AI provider selection logic (switch based on variable)
+- [x] Implement Zai GLM 4.7 integration
+- [x] Prepare placeholder for Ollama/local LLM
 
 **AI Abstraction Interface:**
 ```javascript
