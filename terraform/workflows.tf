@@ -11,5 +11,6 @@ module "n8n_workflows" {
   # Workflow definitions are loaded from JSON files in workflows/ (relative to project root)
   workflow_files = [
     "${path.module}/../workflows/home-lab/example.json",
+    "${path.module}/../workflows/home-lab/ai-agent.json",
   ]
 }

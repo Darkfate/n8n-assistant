@@ -1,0 +1,483 @@
+{
+  "name": "Home Assistant AI Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "webhook/ha-agent",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "b1c1e1c1-0000-4000-8000-000000000001",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "ha-agent-webhook"
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "input_text",
+              "value": "={{ $json.body.input_text }}"
+            },
+            {
+              "name": "source",
+              "value": "={{ $json.body.source || 'home-assistant' }}"
+            },
+            {
+              "name": "request_id",
+              "value": "={{ $json.body.request_id || $workflow.id }}"
+            }
+          ]
+        }
+      },
+      "id": "b1c1e1c1-0000-4000-8000-000000000002",
+      "name": "Extract Input",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.z.ai/api/coding/paas/v4",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"glm-4.7\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are a Home Assistant automation agent. Parse user requests into Home Assistant service calls.\\n\\nAvailable entities: {{ $json.entities_context }}\\nAvailable services: {{ $json.services_context }}\\n\\nOutput valid JSON only with this structure:\\n{\\n  \\\"action\\\": \\\"call_service\\\" | \\\"query_state\\\" | \\\"error\\\",\\n  \\\"service\\\": \\\"domain.service\\\",\\n  \\\"entity_id\\\": \\\"entity.domain\\\",\\n  \\\"parameters\\\": {},\\n  \\\"response_text\\\": \\\"natural language confirmation\\\"\\n}\\n\\nIf request is ambiguous or impossible, set action to \\\"error\\\" with explanation.\\n\\nExamples:\\n- 'Turn on living room lights' -> {\\\"action\\\": \\\"call_service\\\", \\\"service\\\": \\\"light.turn_on\\\", \\\"entity_id\\\": \\\"light.living_room\\\", \\\"parameters\\\": {}, \\\"response_text\\\": \\\"Turning on the living room lights\\\"}\\n- 'Set temperature to 22 degrees' -> {\\\"action\\\": \\\"call_service\\\", \\\"service\\\": \\\"climate.set_temperature\\\", \\\"entity_id\\\": \\\"climate.thermostat\\\", \\\"parameters\\\": {\\\"temperature\\\": 22}, \\\"response_text\\\": \\\"Setting temperature to 22 degrees\\\"}\\n- 'Activate bedtime scene' -> {\\\"action\\\": \\\"call_service\\\", \\\"service\\\": \\\"scene.turn_on\\\", \\\"entity_id\\\": \\\"scene.bedtime\\\", \\\"parameters\\\": {}, \\\"response_text\\\": \\\"Activating bedtime scene\\\"}\\n- 'Launch rocket' -> {\\\"action\\\": \\\"error\\\", \\\"response_text\\\": \\\"I don't know how to launch a rocket. Available actions are controlling lights, climate, covers, scripts, and scenes.\\\"}\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"{{ $json.input_text }}\"\n    }\n  ],\n  \"temperature\": 0.3,\n  \"response_format\": {\"type\": \"json_object\"}\n}",
+        "options": {}
+      },
+      "id": "b1c1e1c1-0000-4000-8000-000000000003",
+      "name": "Call AI Service",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "1",
+          "name": "Zai GLM API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "rules",
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.choices[0].message.content }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "isValidJson"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "valid_json"
+            }
+          ]
+        }
+      },
+      "id": "b1c1e1c1-0000-4000-8000-000000000004",
+      "name": "Validate AI Response",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse the AI response JSON\nconst aiResponse = JSON.parse($input.first().json.choices[0].message.content);\n\n// Validate required fields\nif (!aiResponse.action) {\n  return [{\n    json: {\n      error: 'Invalid AI response: missing action field',\n      raw_response: $input.first().json.choices[0].message.content\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    action: aiResponse.action,\n    service: aiResponse.service || null,\n    entity_id: aiResponse.entity_id || null,\n    parameters: aiResponse.parameters || {},\n    response_text: aiResponse.response_text || 'Action completed',\n    raw_response: $input.first().json.choices[0].message.content\n  }\n}];"
+      },
+      "id": "b1c1e1c1-0000-4000-8000-000000000005",
+      "name": "Parse AI Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1120, 200]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.action }}",
+              "rightValue": "call_service",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "b1c1e1c1-0000-4000-8000-000000000006",
+      "name": "Action Type Check",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1340, 200]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.HOME_ASSISTANT_URL }}/api/services/{{ $json.service }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "homeAssistantApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"entity_id\": \"{{ $json.entity_id }}\",\n  {{ $json.parameters ? JSON.stringify($json.parameters).slice(1, -1) : '' }}\n}",
+        "options": {}
+      },
+      "id": "b1c1e1c1-0000-4000-8000-000000000007",
+      "name": "Call Home Assistant",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1560, 120],
+      "credentials": {
+        "homeAssistantApi": {
+          "id": "2",
+          "name": "Home Assistant API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "status",
+              "value": "=success"
+            },
+            {
+              "name": "message",
+              "value": "={{ $json.response_text }}"
+            },
+            {
+              "name": "action_taken",
+              "value": "={{ $json.service }}"
+            },
+            {
+              "name": "entity",
+              "value": "={{ $json.entity_id }}"
+            },
+            {
+              "name": "request_id",
+              "value": "={{ $json.request_id }}"
+            }
+          ]
+        }
+      },
+      "id": "b1c1e1c1-0000-4000-8000-000000000008",
+      "name": "Format Success Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [1780, 120]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "status",
+              "value": "=error"
+            },
+            {
+              "name": "message",
+              "value": "={{ $json.response_text || 'Unknown error occurred' }}"
+            },
+            {
+              "name": "action_taken",
+              "value": "=none"
+            },
+            {
+              "name": "request_id",
+              "value": "={{ $json.request_id }}"
+            }
+          ]
+        }
+      },
+      "id": "b1c1e1c1-0000-4000-8000-000000000009",
+      "name": "Format Error Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [1560, 280]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {\n  status: $json.status,\n  message: $json.message,\n  action_taken: $json.action_taken,\n  entity: $json.entity || null,\n  request_id: $json.request_id\n} }}"
+      },
+      "id": "b1c1e1c1-0000-4000-8000-000000000010",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [2000, 200]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.HOME_ASSISTANT_URL }}/api/states",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "homeAssistantApi",
+        "options": {}
+      },
+      "id": "b1c1e1c1-0000-4000-8000-000000000011",
+      "name": "Get HA Entities",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [460, 480],
+      "credentials": {
+        "homeAssistantApi": {
+          "id": "2",
+          "name": "Home Assistant API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Build entity context for AI from HA states\nconst entities = $input.first().json;\n\n// Group by domain and build context\nconst entityContext = {};\nconst domains = new Set();\n\nentities.forEach(entity => {\n  const [domain, name] = entity.entity_id.split('.');\n  domains.add(domain);\n  \n  if (!entityContext[domain]) {\n    entityContext[domain] = [];\n  }\n  \n  entityContext[domain].push({\n    entity_id: entity.entity_id,\n    state: entity.state,\n    friendly_name: entity.attributes?.friendly_name || name\n  });\n});\n\n// Build services context (common services per domain)\nconst servicesContext = {\n  light: ['turn_on', 'turn_off', 'toggle'],\n  climate: ['set_temperature', 'set_hvac_mode'],\n  cover: ['open_cover', 'close_cover', 'stop_cover'],\n  script: ['turn_on', 'reload'],\n  scene: ['turn_on'],\n  automation: ['turn_on', 'turn_off', 'trigger'],\n  switch: ['turn_on', 'turn_off', 'toggle'],\n  input_boolean: ['turn_on', 'turn_off', 'toggle']\n};\n\nreturn [{\n  json: {\n    entities_context: JSON.stringify(entityContext),\n    services_context: JSON.stringify(servicesContext),\n    available_domains: Array.from(domains),\n    entity_count: entities.length\n  }\n}];"
+      },
+      "id": "b1c1e1c1-0000-4000-8000-000000000012",
+      "name": "Build Entity Context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 480]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "entities_context",
+              "value": "={{ $('Build Entity Context').first().json.entities_context }}"
+            },
+            {
+              "name": "services_context",
+              "value": "={{ $('Build Entity Context').first().json.services_context }}"
+            }
+          ],
+          "number": [
+            {
+              "name": "entity_count",
+              "value": "={{ $('Build Entity Context').first().json.entity_count }}"
+            }
+          ]
+        }
+      },
+      "id": "b1c1e1c1-0000-4000-8000-000000000013",
+      "name": "Merge Context",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [460, 380]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "error-handling",
+              "name": "Invalid JSON Response",
+              "value": "={{ { status: 'error', message: 'Received invalid response from AI service', request_id: $json.request_id } }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b1c1e1c1-0000-4000-8000-000000000014",
+      "name": "Error Handler",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [1120, 400]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Get HA Entities",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Extract Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Input": {
+      "main": [
+        [
+          {
+            "node": "Merge Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get HA Entities": {
+      "main": [
+        [
+          {
+            "node": "Build Entity Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Entity Context": {
+      "main": [
+        [
+          {
+            "node": "Merge Context",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Context": {
+      "main": [
+        [
+          {
+            "node": "Call AI Service",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call AI Service": {
+      "main": [
+        [
+          {
+            "node": "Validate AI Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate AI Response": {
+      "main": [
+        [
+          {
+            "node": "Parse AI Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error Handler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse AI Response": {
+      "main": [
+        [
+          {
+            "node": "Action Type Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Action Type Check": {
+      "main": [
+        [
+          {
+            "node": "Call Home Assistant",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Format Error Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Home Assistant": {
+      "main": [
+        [
+          {
+            "node": "Format Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Success Response": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Error Response": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error Handler": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2025-01-01T00:00:00.000Z",
+  "versionId": "1"
+}
