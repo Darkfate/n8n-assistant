@@ -232,9 +232,9 @@ If request is ambiguous or impossible, set action to "error" with explanation.
 
 | Question | Impact | Default/Assumption |
 |----------|--------|-------------------|
-| What is the Zai GLM 4.7 API endpoint and authentication method? | AI integration | Need API endpoint/docs |
-| Should AI select different services based on input source (HA vs MQTT)? | Architecture | No - use same AI for all sources initially |
-| How to handle HA instance connectivity (local vs remote)? | Infrastructure | Assume same network via Tailscale |
+| What is the Zai GLM 4.7 API endpoint and authentication method? | AI integration | `https://api.z.ai/api/coding/paas/v4` |
+| Should AI select different services based on input source (HA vs MQTT)? | Architecture | No - initially use the same AI for all sources |
+| How to handle HA instance connectivity (local vs remote)? | Infrastructure | Assume local network (no Tailscale use case yet) |
 | Should entity context be sent on every request or cached? | Performance/accuracy | Cache entity list, refresh every 5 min |
 | How to handle multiple entity matches (e.g., "turn on lights")? | UX | Ask user for clarification or apply to all |
 
