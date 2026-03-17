@@ -56,9 +56,17 @@ Configure the following secrets in your GitHub repository settings (`Settings` â
 | `AWS_SECRET_ACCESS_KEY` | S3 secret key | `your-s3-password` |
 | `ZAI_GLM_API_KEY` | Zai GLM API key for AI Agent workflow | `your-zai-api-key` |
 | `HOME_ASSISTANT_TOKEN` | Long-lived access token for Home Assistant | `eyJhbGci...` |
-| `HOME_ASSISTANT_URL` | Home Assistant instance URL (configure as Variable) | `http://homeassistant.local:8123` |
 
-> **Note:** `S3_ENDPOINT` should be configured as a **Variable** (not Secret) in GitHub Actions settings.
+> **Note:** `S3_ENDPOINT` and `N8N_API_URL` should be configured as **Variables** (not Secrets) in GitHub Actions settings.
+
+### n8n Environment Variables
+
+For the AI Agent workflow to function, you also need to configure the following environment variables in your n8n instance:
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `HOME_ASSISTANT_URL` | Your Home Assistant instance URL | `http://homeassistant.local:8123` |
+| `OLLAMA_URL` | Your Ollama instance URL (optional, for Ollama provider) | `http://localhost:11434` |
 
 ### Environment Setup
 

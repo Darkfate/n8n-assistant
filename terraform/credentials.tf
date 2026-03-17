@@ -16,9 +16,8 @@ resource "n8n_credential" "zai_glm_api" {
 resource "n8n_credential" "home_assistant_api" {
   name = "Home Assistant API"
   type = "homeAssistantApi"
-  # Credential data - using GitHub Secret and Variable
+  # Credential data - only access token is needed
   data = {
     accessToken = var.home_assistant_token
-    baseUrl     = var.home_assistant_url
   }
 }
