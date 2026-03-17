@@ -10,3 +10,25 @@ variable "n8n_api_key" {
   sensitive   = true
   default     = null
 }
+
+# AI Agent Workflow Credentials
+
+variable "zai_glm_api_key" {
+  description = "API key for Zai GLM AI service"
+  type        = string
+  sensitive   = true
+  default     = null
+}
+
+variable "home_assistant_token" {
+  description = "Long-lived access token for Home Assistant API"
+  type        = string
+  sensitive   = true
+  default     = null
+}
+
+variable "home_assistant_url" {
+  description = "Home Assistant instance URL"
+  type        = string
+  default     = null
+}

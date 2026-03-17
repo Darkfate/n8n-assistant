@@ -74,6 +74,9 @@ jobs:
         env:
           N8N_API_URL: ${{ vars.N8N_API_URL }}
           N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+          ZAI_GLM_API_KEY: ${{ secrets.ZAI_GLM_API_KEY }}
+          HOME_ASSISTANT_TOKEN: ${{ secrets.HOME_ASSISTANT_TOKEN }}
+          HOME_ASSISTANT_URL: ${{ vars.HOME_ASSISTANT_URL }}
         run: |
           terraform plan -out=tfplan -no-color 2>&1 | tee plan.txt
           exitcode=$?
@@ -148,6 +151,9 @@ jobs:
         env:
           N8N_API_URL: ${{ vars.N8N_API_URL }}
           N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+          ZAI_GLM_API_KEY: ${{ secrets.ZAI_GLM_API_KEY }}
+          HOME_ASSISTANT_TOKEN: ${{ secrets.HOME_ASSISTANT_TOKEN }}
+          HOME_ASSISTANT_URL: ${{ vars.HOME_ASSISTANT_URL }}
         run: terraform apply -auto-approve tfplan
 
       - name: Disconnect Tailscale
