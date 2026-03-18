@@ -26,3 +26,9 @@ variable "home_assistant_token" {
   sensitive   = true
   default     = null
 }
+
+variable "home_assistant_url" {
+  description = "URL of Home Assistant instance"
+  type        = string
+  default     = null
+}
