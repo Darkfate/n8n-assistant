@@ -7,6 +7,15 @@ variable "workflow_files" {
   type        = list(string)
 }
 
+variable "workflow_templates" {
+  description = "Map of workflow template files and their variables"
+  type = map(object({
+    file     = string
+    vars     = map(string)
+  }))
+  default  = {}
+}
+
 resource "n8n_workflow" "workflows" {
   for_each = toset(var.workflow_files)
 
@@ -17,6 +26,23 @@ resource "n8n_workflow" "workflows" {
   nodes_json      = jsonencode(jsondecode(file(each.value)).nodes)
   connections_json = jsonencode(jsondecode(file(each.value)).connections)
   settings_json    = jsonencode(jsondecode(file(each.value)).settings)
+}
+
+resource "n8n_workflow" "workflow_templates" {
+  for_each = var.workflow_templates
+
+  name  = trimsuffix(basename(each.value.file), ".json.tftpl")
+  active = false
+
+  # Load workflow content from template file with variables
+  nodes_json      = jsonencode(jsondecode(templatefile(each.value.file, each.value.vars)).nodes)
+  connections_json = jsonencode(jsondecode(templatefile(each.value.file, each.value.vars)).connections)
+  settings_json    = jsonencode(jsondecode(templatefile(each.value.file, each.value.vars)).settings)
+
+  # Ignore changes to JSON fields after creation
+  lifecycle {
+    ignore_changes = [nodes_json, connections_json, settings_json]
+  }
 
   # Ignore changes to JSON fields after creation
   # n8n may reformat/normalize JSON differently than jsonencode()
@@ -31,5 +57,5 @@ resource "n8n_workflow" "workflows" {
 
 output "deployed_workflows" {
   description = "List of deployed workflow names"
-  value       = [for wf in n8n_workflow.workflows : wf.name]
+  value       = concat([for wf in n8n_workflow.workflows : wf.name], [for wf in n8n_workflow.workflow_templates : wf.name])
 }
