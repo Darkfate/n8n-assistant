@@ -34,6 +34,10 @@ resource "n8n_workflow" "workflows" {
     ignore_changes = [nodes_json, connections_json, settings_json]
   }
 
+  # Note: Tags must exist in n8n before they can be assigned
+  # tags = ["terraform-managed", "home-lab"]
+}
+
 resource "n8n_workflow" "workflow_templates" {
   for_each = var.workflow_templates
 
