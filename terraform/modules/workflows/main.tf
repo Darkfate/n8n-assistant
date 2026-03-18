@@ -26,7 +26,13 @@ resource "n8n_workflow" "workflows" {
   nodes_json      = jsonencode(jsondecode(file(each.value)).nodes)
   connections_json = jsonencode(jsondecode(file(each.value)).connections)
   settings_json    = jsonencode(jsondecode(file(each.value)).settings)
-}
+
+  # Ignore changes to JSON fields after creation
+  # n8n may reformat/normalize JSON differently than jsonencode()
+  # The source of truth is the JSON file in the repo
+  lifecycle {
+    ignore_changes = [nodes_json, connections_json, settings_json]
+  }
 
 resource "n8n_workflow" "workflow_templates" {
   for_each = var.workflow_templates
@@ -40,13 +46,8 @@ resource "n8n_workflow" "workflow_templates" {
   settings_json    = jsonencode(jsondecode(templatefile(each.value.file, each.value.vars)).settings)
 
   # Ignore changes to JSON fields after creation
-  lifecycle {
-    ignore_changes = [nodes_json, connections_json, settings_json]
-  }
-
-  # Ignore changes to JSON fields after creation
   # n8n may reformat/normalize JSON differently than jsonencode()
-  # The source of truth is the JSON file in the repo
+  # The source of truth is the template file in the repo
   lifecycle {
     ignore_changes = [nodes_json, connections_json, settings_json]
   }
