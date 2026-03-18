@@ -531,6 +531,17 @@
         ]
       ]
     },
+    "Normalize AI Response": {
+      "main": [
+        [
+          {
+            "node": "Validate AI Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "Validate AI Response": {
       "main": [
         [
