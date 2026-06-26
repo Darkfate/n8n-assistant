@@ -16,11 +16,5 @@ module "n8n_workflows" {
 
   # Workflow templates use Terraform's templatefile() to inject variables
   workflow_templates = {
-    "ai-agent" = {
-      file = "${path.module}/../workflows/home-lab/ai-agent.json.tftpl"
-      vars = {
-        home_assistant_url = var.home_assistant_url
-      }
-    }
   }
 }
