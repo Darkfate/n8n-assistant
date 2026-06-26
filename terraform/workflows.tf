@@ -12,6 +12,7 @@ module "n8n_workflows" {
   workflow_files = [
     "${path.module}/../workflows/home-lab/example.json",
     "${path.module}/../workflows/home-lab/moody-menu.json",
+    "${path.module}/../workflows/home-lab/test-google-sheets-trigger.json",
   ]
 
   # Workflow templates use Terraform's templatefile() to inject variables
