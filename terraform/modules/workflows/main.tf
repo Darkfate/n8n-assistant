@@ -27,9 +27,16 @@ resource "n8n_workflow" "workflows" {
   connections_json = jsonencode(jsondecode(file(each.value)).connections)
   settings_json    = jsonencode(jsondecode(file(each.value)).settings)
 
-  # Ignore changes to JSON fields after creation
+  # Trigger replacement when workflow file changes
+  # This allows workflow updates from the repo while still protecting
+  # against manual n8n edits breaking Terraform
+  triggers = {
+    workflow_hash = sha256file(each.value)
+  }
+
+  # Ignore changes to JSON fields to prevent conflicts with n8n UI edits
   # n8n may reformat/normalize JSON differently than jsonencode()
-  # The source of truth is the JSON file in the repo
+  # The source of truth for structure is the JSON file in the repo
   lifecycle {
     ignore_changes = [nodes_json, connections_json, settings_json]
   }
@@ -49,9 +56,17 @@ resource "n8n_workflow" "workflow_templates" {
   connections_json = jsonencode(jsondecode(templatefile(each.value.file, each.value.vars)).connections)
   settings_json    = jsonencode(jsondecode(templatefile(each.value.file, each.value.vars)).settings)
 
-  # Ignore changes to JSON fields after creation
+  # Trigger replacement when template file or variables change
+  # This allows workflow updates from the repo while still protecting
+  # against manual n8n edits breaking Terraform
+  triggers = {
+    template_hash = sha256file(each.value.file)
+    vars_hash     = sha256(jsonencode(each.value.vars))
+  }
+
+  # Ignore changes to JSON fields to prevent conflicts with n8n UI edits
   # n8n may reformat/normalize JSON differently than jsonencode()
-  # The source of truth is the template file in the repo
+  # The source of truth for structure is the template file in the repo
   lifecycle {
     ignore_changes = [nodes_json, connections_json, settings_json]
   }
