@@ -20,7 +20,7 @@ locals {
   # Convert workflow list to map for better key handling
   workflow_map = {
     for file in var.workflow_files :
-    trimsuffix(basename(file, ".json") => file
+    trimsuffix(basename(file), ".json") => file
   }
 }
 
