@@ -3,71 +3,72 @@
   "nodes": [
     {
       "parameters": {
-        "path": "webhook/moody-menu",
-        "responseMode": "responseNode",
+        "event": [
+          "create"
+        ],
+        "filters": {
+          "hasFolder": false,
+          "mimeType": {
+            "values": [
+              {
+                "extension": "",
+                "id": "",
+                "mimeType": "",
+                "name": "Google Drive"
+              }
+            ]
+          }
+        },
         "options": {}
       },
       "id": "b1c1e1c1-0000-4000-8000-000000000001",
-      "name": "Webhook",
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 2,
+      "name": "Google Drive Trigger",
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
       "position": [240, 300],
-      "webhookId": "moody-menu-webhook"
+      "credentials": {
+        "oauthApi": {
+          "id": "1",
+          "name": "Google Drive OAuth2"
+        }
+      }
     },
     {
       "parameters": {
         "values": {
           "string": [
             {
+              "name": "fileName",
+              "value": "={{ $json.name }}"
+            },
+            {
+              "name": "fileId",
+              "value": "={{ $json.id }}"
+            },
+            {
+              "name": "createdTime",
+              "value": "={{ $json.createdTime }}"
+            },
+            {
               "name": "message",
-              "value": "Hello World! Welcome to Moody Menu."
-            },
-            {
-              "name": "status",
-              "value": "success"
-            },
-            {
-              "name": "timestamp",
-              "value": "={{ $now }}"
+              "value": "Hello World! File detected in Moody Menu folder."
             }
           ]
         }
       },
       "id": "b1c1e1c1-0000-4000-8000-000000000002",
-      "name": "Set Hello World",
+      "name": "Process File",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3,
       "position": [460, 300]
-    },
-    {
-      "parameters": {
-        "respondWith": "json",
-        "responseBody": "={{ {\n  message: $json.message,\n  status: $json.status,\n  timestamp: $json.timestamp\n} }}"
-      },
-      "id": "b1c1e1c1-0000-4000-8000-000000000003",
-      "name": "Respond to Webhook",
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1,
-      "position": [680, 300]
     }
   ],
   "connections": {
-    "Webhook": {
+    "Google Drive Trigger": {
       "main": [
         [
           {
-            "node": "Set Hello World",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Set Hello World": {
-      "main": [
-        [
-          {
-            "node": "Respond to Webhook",
+            "node": "Process File",
             "type": "main",
             "index": 0
           }
