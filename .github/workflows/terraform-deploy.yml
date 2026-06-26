@@ -17,7 +17,6 @@ on:
 
 env:
   TERRAFORM_VERSION: '1.9'
-  TAILSCALE_VERSION: '1.76.6'
 
 jobs:
   # Plan job runs on all triggers (PR, push, manual)
@@ -35,16 +34,12 @@ jobs:
         with:
           terraform_version: ${{ env.TERRAFORM_VERSION }}
 
-      - name: Install Tailscale
-        run: |
-          curl -fsSL https://tailscale.com/install.sh -o /tmp/install.sh
-          sh /tmp/install.sh
-          tailscale version
-
       - name: Connect to Tailscale
-        run: |
-          sudo tailscale up --authkey ${{ secrets.TAILSCALE_AUTH_KEY }} --hostname "github-actions-terraform" --accept-routes
-          sudo tailscale status
+        uses: tailscale/github-action@v2
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+          tags: tag:gh-n8n-assistant
 
       - name: Terraform Init
         working-directory: ./terraform
@@ -91,10 +86,6 @@ jobs:
           path: terraform/tfplan
           retention-days: 7
 
-      - name: Disconnect Tailscale
-        if: always()
-        run: sudo tailscale down
-
   # Apply job only runs on push to main and requires manual approval
   apply:
     name: Terraform Apply
@@ -111,16 +102,12 @@ jobs:
         with:
           terraform_version: ${{ env.TERRAFORM_VERSION }}
 
-      - name: Install Tailscale
-        run: |
-          curl -fsSL https://tailscale.com/install.sh -o /tmp/install.sh
-          sh /tmp/install.sh
-          tailscale version
-
       - name: Connect to Tailscale
-        run: |
-          sudo tailscale up --authkey ${{ secrets.TAILSCALE_AUTH_KEY }} --hostname "github-actions-terraform" --accept-routes
-          sudo tailscale status
+        uses: tailscale/github-action@v2
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+          tags: tag:gh-n8n-assistant
 
       - name: Terraform Init
         working-directory: ./terraform
@@ -155,7 +142,3 @@ jobs:
           TF_VAR_home_assistant_token: ${{ secrets.HOME_ASSISTANT_TOKEN }}
           TF_VAR_home_assistant_url: ${{ vars.HOME_ASSISTANT_URL }}
         run: terraform apply -auto-approve tfplan
-
-      - name: Disconnect Tailscale
-        if: always()
-        run: sudo tailscale down
