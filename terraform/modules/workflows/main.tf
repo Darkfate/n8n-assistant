@@ -16,23 +16,31 @@ variable "workflow_templates" {
   default  = {}
 }
 
+locals {
+  # Convert workflow list to map for better key handling
+  workflow_map = {
+    for file in var.workflow_files :
+    trimsuffix(basename(file, ".json") => file
+  }
+}
+
 # Create local resources to track file hashes for triggering workflow recreation
 resource "local_file" "workflow_hashes" {
-  for_each = toset(var.workflow_files)
+  for_each = local.workflow_map
   content  = sha256file(each.value)
-  filename = "${path.module}/.hashes/${trimsuffix(basename(each.value), ".json")}.hash"
+  filename = "${path.module}/.hashes/${each.key}.hash"
 }
 
 resource "local_file" "template_hashes" {
   for_each = var.workflow_templates
   content  = "${sha256file(each.value.file)}-${sha256(jsonencode(each.value.vars))}"
-  filename = "${path.module}/.hashes/${trimsuffix(basename(each.value.file), ".json.tftpl")}.hash"
+  filename = "${path.module}/.hashes/${each.key}.hash"
 }
 
 resource "n8n_workflow" "workflows" {
-  for_each = toset(var.workflow_files)
+  for_each = local.workflow_map
 
-  name  = trimsuffix(basename(each.value), ".json")
+  name  = each.key
   active = false
 
   # Load workflow content from JSON file
@@ -44,7 +52,7 @@ resource "n8n_workflow" "workflows" {
   lifecycle {
     create_before_destroy = true
     replace_triggered_by = [
-      local_file.workflow_hashes[each.value].id
+      local_file.workflow_hashes[each.key].id
     ]
     ignore_changes = [nodes_json, connections_json, settings_json]
   }
@@ -56,7 +64,7 @@ resource "n8n_workflow" "workflows" {
 resource "n8n_workflow" "workflow_templates" {
   for_each = var.workflow_templates
 
-  name  = trimsuffix(basename(each.value.file), ".json.tftpl")
+  name  = each.key
   active = false
 
   # Load workflow content from template file with variables
