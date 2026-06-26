@@ -6,6 +6,7 @@
 !example.tfvars
 .terraform.lock.hcl
 terraform.tfplan
+.hashes/
 
 # Environment
 .env

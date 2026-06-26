@@ -16,6 +16,19 @@ variable "workflow_templates" {
   default  = {}
 }
 
+# Create local resources to track file hashes for triggering workflow recreation
+resource "local_file" "workflow_hashes" {
+  for_each = toset(var.workflow_files)
+  content  = sha256file(each.value)
+  filename = "${path.module}/.hashes/${trimsuffix(basename(each.value), ".json")}.hash"
+}
+
+resource "local_file" "template_hashes" {
+  for_each = var.workflow_templates
+  content  = "${sha256file(each.value.file)}-${sha256(jsonencode(each.value.vars))}"
+  filename = "${path.module}/.hashes/${trimsuffix(basename(each.value.file), ".json.tftpl")}.hash"
+}
+
 resource "n8n_workflow" "workflows" {
   for_each = toset(var.workflow_files)
 
@@ -27,11 +40,11 @@ resource "n8n_workflow" "workflows" {
   connections_json = jsonencode(jsondecode(file(each.value)).connections)
   settings_json    = jsonencode(jsondecode(file(each.value)).settings)
 
-  # Trigger recreation when workflow file changes
+  # Trigger recreation when workflow file hash changes
   lifecycle {
     create_before_destroy = true
     replace_triggered_by = [
-      sha256file(each.value)
+      local_file.workflow_hashes[each.value].id
     ]
     ignore_changes = [nodes_json, connections_json, settings_json]
   }
@@ -55,8 +68,7 @@ resource "n8n_workflow" "workflow_templates" {
   lifecycle {
     create_before_destroy = true
     replace_triggered_by = [
-      sha256file(each.value.file),
-      sha256(jsonencode(each.value.vars))
+      local_file.template_hashes[each.key].id
     ]
     ignore_changes = [nodes_json, connections_json, settings_json]
   }
