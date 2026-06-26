@@ -69,6 +69,8 @@ jobs:
         env:
           TF_VAR_n8n_api_url: ${{ vars.N8N_API_URL }}
           TF_VAR_n8n_api_key: ${{ secrets.N8N_API_KEY }}
+          TF_VAR_google_sheets_client_id: ${{ secrets.GOOGLE_SHEETS_CLIENT_ID }}
+          TF_VAR_google_sheets_client_secret: ${{ secrets.GOOGLE_SHEETS_CLIENT_SECRET }}
         run: |
           terraform plan -out=tfplan -no-color 2>&1 | tee plan.txt
           exitcode=$?
@@ -135,4 +137,6 @@ jobs:
         env:
           TF_VAR_n8n_api_url: ${{ vars.N8N_API_URL }}
           TF_VAR_n8n_api_key: ${{ secrets.N8N_API_KEY }}
+          TF_VAR_google_sheets_client_id: ${{ secrets.GOOGLE_SHEETS_CLIENT_ID }}
+          TF_VAR_google_sheets_client_secret: ${{ secrets.GOOGLE_SHEETS_CLIENT_SECRET }}
         run: terraform apply -auto-approve tfplan

@@ -3,28 +3,81 @@
   "nodes": [
     {
       "parameters": {
-        "path": "webhook/moody-menu",
-        "responseMode": "responseNode",
-        "options": {}
+        "event": [
+          "rowUpdated"
+        ],
+        "options": {
+          "sheetName": {}
+        }
       },
       "id": "b1c1e1c1-0000-4000-8000-000000000001",
-      "name": "Webhook",
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 2,
+      "name": "Google Sheets Trigger - Row Updated",
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
       "position": [240, 300],
-      "webhookId": "moody-menu-webhook"
+      "credentials": {
+        "oauthApi": {
+          "id": "1",
+          "name": "Google Sheets OAuth2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "event": [
+          "newRow"
+        ],
+        "options": {
+          "sheetName": {}
+        }
+      },
+      "id": "b1c1e1c1-0000-4000-8000-000000000002",
+      "name": "Google Sheets Trigger - New Row",
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [240, 480],
+      "credentials": {
+        "oauthApi": {
+          "id": "1",
+          "name": "Google Sheets OAuth2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "mergeByPosition",
+        "options": {}
+      },
+      "id": "b1c1e1c1-0000-4000-8000-000000000003",
+      "name": "Merge Triggers",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [460, 390]
     },
     {
       "parameters": {
         "values": {
           "string": [
             {
-              "name": "message",
-              "value": "Hello World! Welcome to Moody Menu."
+              "name": "spreadsheetId",
+              "value": "={{ $json.spreadsheetId }}"
             },
             {
-              "name": "status",
-              "value": "success"
+              "name": "sheetName",
+              "value": "={{ $json.sheetName }}"
+            },
+            {
+              "name": "eventType",
+              "value": "={{ $json.eventType }}"
+            },
+            {
+              "name": "rowId",
+              "value": "={{ $json.rowId }}"
+            },
+            {
+              "name": "message",
+              "value": "Menu change detected in Moody Menu spreadsheet"
             },
             {
               "name": "timestamp",
@@ -33,41 +86,41 @@
           ]
         }
       },
-      "id": "b1c1e1c1-0000-4000-8000-000000000002",
-      "name": "Set Hello World",
+      "id": "b1c1e1c1-0000-4000-8000-000000000004",
+      "name": "Extract Event Data",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3,
-      "position": [460, 300]
-    },
-    {
-      "parameters": {
-        "respondWith": "json",
-        "responseBody": "={{ {\n  message: $json.message,\n  status: $json.status,\n  timestamp: $json.timestamp\n} }}"
-      },
-      "id": "b1c1e1c1-0000-4000-8000-000000000003",
-      "name": "Respond to Webhook",
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1,
-      "position": [680, 300]
+      "position": [680, 390]
     }
   ],
   "connections": {
-    "Webhook": {
+    "Google Sheets Trigger - Row Updated": {
       "main": [
         [
           {
-            "node": "Set Hello World",
+            "node": "Merge Triggers",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Set Hello World": {
+    "Google Sheets Trigger - New Row": {
       "main": [
         [
           {
-            "node": "Respond to Webhook",
+            "node": "Merge Triggers",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Triggers": {
+      "main": [
+        [
+          {
+            "node": "Extract Event Data",
             "type": "main",
             "index": 0
           }
