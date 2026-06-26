@@ -5,7 +5,7 @@
 # Google Sheets OAuth2 Credential
 resource "n8n_credential" "google_sheets_oauth2" {
   name = "Google Sheets OAuth2"
-  type = "googleOAuth2Api"
+  type = "googleSheets"
 
   data = {
     clientId     = var.google_sheets_client_id
