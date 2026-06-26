@@ -10,5 +10,6 @@ resource "n8n_credential" "google_sheets_oauth2" {
   data = {
     clientId     = var.google_sheets_client_id
     clientSecret = var.google_sheets_client_secret
+    scope        = "https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/spreadsheets"
   }
 }
