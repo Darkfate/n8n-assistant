@@ -1,0 +1,87 @@
+{
+  "name": "Moody Menu",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "webhook/moody-menu",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "b1c1e1c1-0000-4000-8000-000000000001",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "moody-menu-webhook"
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "message",
+              "value": "Hello World! Welcome to Moody Menu."
+            },
+            {
+              "name": "status",
+              "value": "success"
+            },
+            {
+              "name": "timestamp",
+              "value": "={{ $now }}"
+            }
+          ]
+        }
+      },
+      "id": "b1c1e1c1-0000-4000-8000-000000000002",
+      "name": "Set Hello World",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {\n  message: $json.message,\n  status: $json.status,\n  timestamp: $json.timestamp\n} }}"
+      },
+      "id": "b1c1e1c1-0000-4000-8000-000000000003",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [680, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Set Hello World",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Hello World": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2025-01-01T00:00:00.000Z",
+  "versionId": "1"
+}

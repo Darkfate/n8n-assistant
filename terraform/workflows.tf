@@ -12,5 +12,6 @@ module "n8n_workflows" {
   workflow_files = [
     "${path.module}/../workflows/home-lab/example.json",
     "${path.module}/../workflows/home-lab/ai-agent.json",
+    "${path.module}/../workflows/home-lab/moody-menu.json",
   ]
 }
