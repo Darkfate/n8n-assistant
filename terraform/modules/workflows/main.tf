@@ -27,13 +27,13 @@ locals {
 # Create local resources to track file hashes for triggering workflow recreation
 resource "local_file" "workflow_hashes" {
   for_each = local.workflow_map
-  content  = sha256file(each.value)
+  content  = filesha256(each.value)
   filename = "${path.module}/.hashes/${each.key}.hash"
 }
 
 resource "local_file" "template_hashes" {
   for_each = var.workflow_templates
-  content  = "${sha256file(each.value.file)}-${sha256(jsonencode(each.value.vars))}"
+  content  = "${filesha256(each.value.file)}-${sha256(jsonencode(each.value.vars))}"
   filename = "${path.module}/.hashes/${each.key}.hash"
 }
 
