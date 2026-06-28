@@ -54,7 +54,6 @@ resource "n8n_workflow" "workflows" {
     replace_triggered_by = [
       local_file.workflow_hashes[each.key].id
     ]
-    ignore_changes = [nodes_json, connections_json, settings_json]
   }
 
   # Note: Tags must exist in n8n before they can be assigned
